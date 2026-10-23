@@ -146,7 +146,7 @@
         </button>
       </div>
 
-      <!-- Utilities (Sound, Fullscreen, Reset) -->
+      <!-- Utilities (Sound, Fullscreen, Winners Counter) -->
       <div class="flex items-center gap-2">
         <button id="soundToggleBtn" onclick="toggleMute()" class="p-2.5 w-10 h-10 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 text-slate-300 hover:text-white transition-all flex items-center justify-center" title="Toggle Sound">
           <i id="soundIcon" class="fa-solid fa-volume-high"></i>
@@ -177,7 +177,7 @@
       <div id="view-wheel" class="w-full flex flex-col items-center justify-center">
         <div class="relative flex items-center justify-center my-4">
           <!-- Outer Wheel Lighting Frame -->
-          <div class="w-[330px] h-[330px] sm:w-[460px] sm:h-[460px] rounded-full p-2.5 sm:p-3.5 bg-gradient-to-tr from-amber-500 via-rose-500 to-indigo-600 shadow-2xl shadow-rose-950/70 relative animate-pulse-glow flex items-center justify-center">
+          <div id="wheelOuterFrame" class="w-[330px] h-[330px] sm:w-[460px] sm:h-[460px] rounded-full p-2.5 sm:p-3.5 bg-gradient-to-tr from-amber-500 via-rose-500 to-indigo-600 shadow-2xl shadow-rose-950/70 relative animate-pulse-glow flex items-center justify-center transition-all">
             
             <!-- Pointer / Stopper Pin -->
             <div class="absolute -top-4 sm:-top-5 z-30 flex flex-col items-center drop-shadow-xl pointer-events-none">
@@ -199,7 +199,7 @@
           </div>
         </div>
 
-        <p class="text-xs sm:text-sm text-slate-400 mt-2 flex items-center gap-2">
+        <p id="wheelHintText" class="text-xs sm:text-sm text-slate-400 mt-2 flex items-center gap-2 text-center">
           <i class="fa-solid fa-keyboard text-slate-500"></i> Press <kbd class="px-2 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300 text-xs font-mono font-bold">SPACE</kbd> or Click Center to Spin!
         </p>
       </div>
@@ -280,11 +280,11 @@
         <div>
           <label class="text-xs font-semibold text-slate-400 block mb-1.5 uppercase tracking-wider">Quick Presets</label>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <button onclick="applyPreset('annualParty')" class="p-2 rounded-xl bg-slate-800/70 hover:bg-slate-700/80 border border-slate-700 text-xs font-medium text-slate-200 transition-all text-center">
-              🎉 Prizes
-            </button>
             <button onclick="applyPreset('academicSubjects')" class="p-2 rounded-xl bg-slate-800/70 hover:bg-slate-700/80 border border-slate-700 text-xs font-medium text-slate-200 transition-all text-center">
               📚 Subjects
+            </button>
+            <button onclick="applyPreset('annualParty')" class="p-2 rounded-xl bg-slate-800/70 hover:bg-slate-700/80 border border-slate-700 text-xs font-medium text-slate-200 transition-all text-center">
+              🎉 Prizes
             </button>
             <button onclick="applyPreset('teamMembers')" class="p-2 rounded-xl bg-slate-800/70 hover:bg-slate-700/80 border border-slate-700 text-xs font-medium text-slate-200 transition-all text-center">
               👥 Names
@@ -295,27 +295,26 @@
           </div>
         </div>
 
-        <!-- Single / Multi Name Quick Add Bar -->
+        <!-- Single / Multi Name Quick Add Bar with Form Wrapping for Guaranteed Enter Action -->
         <div>
           <label for="singleNameInput" class="text-xs font-semibold text-slate-400 block mb-1.5 uppercase tracking-wider">
             Quick Add Subject or Name
           </label>
-          <div class="flex gap-2">
+          <form id="quickAddForm" onsubmit="event.preventDefault(); addNewName();" class="flex gap-2">
             <input 
               type="text" 
               id="singleNameInput" 
-              placeholder="e.g. Physics, Chemistry or Sarah Connor" 
-              onkeydown="if(event.key==='Enter') addNewName()"
+              placeholder="e.g. Mathematics, Physics, Chemistry" 
               class="flex-1 bg-slate-950/90 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-rose-500/80 focus:ring-1 focus:ring-rose-500/80"
             />
             <button 
-              type="button" 
-              onclick="addNewName()" 
+              type="submit" 
+              id="btnAddSubject"
               class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs transition-all flex items-center gap-1.5 shrink-0 shadow-md shadow-rose-600/30">
               <i class="fa-solid fa-plus"></i> Add
             </button>
-          </div>
-          <p class="text-[11px] text-slate-500 mt-1">Tip: You can add multiple subjects separated by commas.</p>
+          </form>
+          <p class="text-[11px] text-slate-500 mt-1">Press <kbd class="bg-slate-800 px-1 rounded text-slate-400">Enter</kbd> or click Add. Comma-separated entries supported.</p>
         </div>
 
         <!-- Textarea for entries -->
@@ -343,8 +342,16 @@
             oninput="handleItemsChange()" 
             onchange="handleItemsChange()" 
             onpaste="setTimeout(handleItemsChange, 20)" 
-            placeholder="Type or paste subjects here. Supports:&#10;• 1 per line&#10;• Comma-separated (Math, English, Science)&#10;• Excel columns" 
+            placeholder="Type or paste subjects here. Supports:&#10;• 1 per line (Math&#10;Physics&#10;Chemistry)&#10;• Comma-separated (Math, English, Science)&#10;• Excel columns" 
             class="w-full bg-slate-950/90 border border-slate-800 rounded-2xl p-3 text-sm text-slate-200 focus:outline-none focus:border-rose-500/80 focus:ring-1 focus:ring-rose-500/80 resize-none font-mono"></textarea>
+          
+          <!-- Explicit Manual Sync Button -->
+          <button 
+            type="button" 
+            onclick="manualSyncFromTextarea()" 
+            class="w-full mt-2 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700/80 text-amber-300 font-semibold text-xs transition-all flex items-center justify-center gap-2 shadow-sm">
+            <i class="fa-solid fa-arrows-rotate text-amber-400"></i> Sync & Update Wheel Now
+          </button>
         </div>
 
         <!-- Live Badges Preview of Active Subjects -->
@@ -358,4 +365,1329 @@
             </button>
           </div>
           <div id="itemsChipsContainer" class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-2.5 rounded-2xl bg-slate-950/80 border border-slate-800/90">
-  
+            <!-- Dynamically populated tags with individual delete buttons -->
+          </div>
+        </div>
+
+        <!-- Draw Rules & Fair Mode Settings -->
+        <div class="bg-slate-950/60 rounded-2xl p-3.5 border border-slate-800/80 flex flex-col gap-3">
+          <div class="flex items-center justify-between">
+            <div class="flex flex-col">
+              <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                <i class="fa-solid fa-user-minus text-amber-400"></i> Fair Mode (No Repeats)
+              </span>
+              <span class="text-[11px] text-slate-400">Remove winner automatically upon draw</span>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="removeWinnerToggle" class="sr-only peer" checked>
+              <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600"></div>
+            </label>
+          </div>
+
+          <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
+            <div class="flex flex-col">
+              <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                <i class="fa-solid fa-stopwatch text-indigo-400"></i> Spin Duration
+              </span>
+              <span class="text-[11px] text-slate-400">Suspense timing</span>
+            </div>
+            <select id="spinDurationSelect" class="bg-slate-900 border border-slate-700 text-xs rounded-xl px-2.5 py-1 text-slate-300 font-semibold focus:outline-none">
+              <option value="4">Fast (4s)</option>
+              <option value="6" selected>Normal (6s)</option>
+              <option value="9">Dramatic (9s)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-2">
+          <button onclick="clearAllEntries()" class="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700/70 text-slate-300 hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-trash-can"></i> Clear List
+          </button>
+          <button onclick="triggerActiveDraw()" class="flex-[2] py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-purple-600 hover:from-rose-600 hover:to-purple-700 text-white text-xs font-bold shadow-lg shadow-rose-600/30 transition-all flex items-center justify-center gap-2">
+            <i class="fa-solid fa-play"></i> Draw Winner Now
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Quick Recent Winners Card -->
+      <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/90 rounded-3xl p-5 shadow-xl">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-crown text-amber-400"></i>
+            <h3 class="font-bold text-sm text-white">Recent Winners</h3>
+          </div>
+          <button onclick="openHistoryModal()" class="text-xs text-rose-400 hover:text-rose-300 font-semibold">
+            View All
+          </button>
+        </div>
+        <div id="quickRecentList" class="divide-y divide-slate-800/60 mt-2 max-h-48 overflow-y-auto pr-1">
+          <div class="py-4 text-center text-xs text-slate-500">No winners drawn yet.</div>
+        </div>
+      </div>
+
+    </aside>
+
+  </main>
+
+  <!-- WINNER CELEBRATION MODAL -->
+  <div id="winnerModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300">
+    <div id="winnerModalCard" class="w-full max-w-lg bg-gradient-to-b from-slate-900 via-slate-900 to-[#120f24] border-2 border-amber-500/50 rounded-3xl p-8 shadow-2xl shadow-rose-600/30 text-center relative transform scale-90 transition-transform duration-300 overflow-hidden">
+      
+      <!-- Top Decorative Ribbon/Aura -->
+      <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-48 h-48 bg-amber-400/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Trophy Icon with glow -->
+      <div class="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-amber-500 via-rose-500 to-indigo-600 p-0.5 shadow-xl shadow-amber-500/30 mb-4 animate-bounce-soft">
+        <div class="w-full h-full bg-slate-950 rounded-[22px] flex items-center justify-center text-amber-400 text-3xl">
+          <i class="fa-solid fa-trophy"></i>
+        </div>
+      </div>
+
+      <span class="px-4 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-rose-500/20 border border-amber-500/40 text-amber-300 text-xs font-black uppercase tracking-widest">
+        🎉 BINGO! WE HAVE A WINNER 🎉
+      </span>
+
+      <div class="my-6">
+        <h2 id="winnerNameDisplay" class="text-3xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-rose-300 to-purple-300 break-words font-mono">
+          Champion Name
+        </h2>
+        <p id="winnerDrawInfo" class="text-xs text-slate-400 mt-2">Drawn from Fortune Wheel at 12:00 PM</p>
+      </div>
+
+      <div class="flex items-center justify-center gap-3 mt-6">
+        <button onclick="closeWinnerModal()" class="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm transition-all border border-slate-700">
+          Close
+        </button>
+        <button onclick="fireConfettiAgain()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 hover:from-amber-600 hover:to-purple-700 text-white font-bold text-sm shadow-lg shadow-rose-600/30 hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Celebrate More!
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FULL WINNERS HISTORY MODAL -->
+  <div id="historyModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-200">
+    <div class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl flex flex-col max-h-[85vh]">
+      
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center">
+            <i class="fa-solid fa-trophy"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-lg text-white">Winners Hall of Fame</h3>
+            <p class="text-xs text-slate-400">All winning records from this session</p>
+          </div>
+        </div>
+        <button onclick="closeHistoryModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition-colors">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Winners List Scroll -->
+      <div id="historyModalList" class="flex-1 overflow-y-auto py-4 space-y-2 pr-1 min-h-[220px]">
+        <!-- populated dynamically -->
+      </div>
+
+      <div class="pt-4 border-t border-slate-800 flex items-center justify-between gap-3">
+        <button onclick="copyWinnersList()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-xs transition-all flex items-center gap-2">
+          <i class="fa-solid fa-copy"></i> Copy Winners List
+        </button>
+        <button onclick="clearHistoryRecords()" class="px-4 py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 font-semibold text-xs transition-all flex items-center gap-2">
+          <i class="fa-solid fa-trash-can"></i> Clear History
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl bg-slate-900/95 border border-slate-700 text-slate-100 text-sm font-semibold shadow-2xl shadow-black/80 flex items-center gap-2 pointer-events-none opacity-0 transition-all duration-300">
+    <i id="toastIcon" class="fa-solid fa-circle-check text-rose-400"></i>
+    <span id="toastMsg">Notification message</span>
+  </div>
+
+  <!-- APPLICATION JAVASCRIPT LOGIC -->
+  <script>
+    /* =====================================================================
+       1. APPLICATION STATE & SOUND SYNTHESIS
+       ===================================================================== */
+    const state = {
+      mode: 'wheel', // 'wheel' | 'raffle' | 'mystery'
+      items: [],
+      winners: [],
+      isSpinning: false,
+      audioMuted: false,
+      
+      // Wheel animation specifics
+      wheel: {
+        angle: 0,
+        angularVelocity: 0,
+        friction: 0.985,
+        targetAngle: 0,
+        rafId: null,
+        sliceColors: [
+          '#f43f5e', '#8b5cf6', '#06b6d4', '#10b981', 
+          '#f59e0b', '#ec4899', '#3b82f6', '#6366f1',
+          '#14b8a6', '#d946ef', '#eab308', '#22c55e'
+        ]
+      },
+
+      // Mystery boxes
+      mysteryCards: []
+    };
+
+    // Web Audio Synthesizer (No external assets required!)
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    // Play synthesized mechanical wheel tick
+    function playTickSound() {
+      if (state.audioMuted) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(600, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.04);
+
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.04);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start();
+        osc.stop(ctx.currentTime + 0.04);
+      } catch (e) {
+        // Safe fail
+      }
+    }
+
+    // Play synthesized triumphant fanfare chord
+    function playVictoryFanfare() {
+      if (state.audioMuted) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99]; // C Major arpeggio
+        notes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.08);
+
+          gain.gain.setValueAtTime(0.22, ctx.currentTime + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.08 + 0.8);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.start(ctx.currentTime + idx * 0.08);
+          osc.stop(ctx.currentTime + idx * 0.08 + 0.85);
+        });
+      } catch (e) {
+        // Safe fail
+      }
+    }
+
+    // Synthesize realistic stadium crowd cheering & enthusiastic whistles
+    function playCrowdCheer() {
+      if (state.audioMuted) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const duration = 2.4;
+
+        // 1. Generate Pink-tinted noise buffer for the stadium crowd roar
+        const bufferSize = ctx.sampleRate * duration;
+        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        let b0 = 0, b1 = 0, b2 = 0;
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          b0 = 0.99886 * b0 + white * 0.0555;
+          b1 = 0.99332 * b1 + white * 0.0751;
+          b2 = 0.96900 * b2 + white * 0.1539;
+          output[i] = (b0 + b1 + b2 + white * 0.2) * 0.5;
+        }
+
+        const noiseNode = ctx.createBufferSource();
+        noiseNode.buffer = noiseBuffer;
+
+        // 2. Vocal Formant Bandpass Filters (simulating human voices in unison)
+        const formantFrequencies = [650, 1300, 2400];
+        const formantGains = [];
+
+        formantFrequencies.forEach((freq) => {
+          const filter = ctx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(freq, now);
+          filter.Q.setValueAtTime(2.2, now);
+          noiseNode.connect(filter);
+          formantGains.push(filter);
+        });
+
+        // Crowd Roar Dynamics Envelope
+        const crowdGain = ctx.createGain();
+        crowdGain.gain.setValueAtTime(0.01, now);
+        crowdGain.gain.exponentialRampToValueAtTime(0.65, now + 0.22);
+        crowdGain.gain.setValueAtTime(0.55, now + 1.2);
+        crowdGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        formantGains.forEach(filter => filter.connect(crowdGain));
+        crowdGain.connect(ctx.destination);
+
+        noiseNode.start(now);
+        noiseNode.stop(now + duration);
+
+        // 3. Celebratory whistles
+        const whistles = [
+          { delay: 0.08, startFreq: 850, peakFreq: 1950, dur: 0.5, vol: 0.14 },
+          { delay: 0.25, startFreq: 1150, peakFreq: 2600, dur: 0.42, vol: 0.16 },
+          { delay: 0.42, startFreq: 750, peakFreq: 1650, dur: 0.55, vol: 0.12 },
+          { delay: 0.65, startFreq: 1300, peakFreq: 2900, dur: 0.45, vol: 0.15 }
+        ];
+
+        whistles.forEach(w => {
+          const osc = ctx.createOscillator();
+          const wGain = ctx.createGain();
+          const startTime = now + w.delay;
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(w.startFreq, startTime);
+          osc.frequency.exponentialRampToValueAtTime(w.peakFreq, startTime + w.dur * 0.6);
+          osc.frequency.exponentialRampToValueAtTime(w.peakFreq * 0.85, startTime + w.dur);
+
+          wGain.gain.setValueAtTime(0.001, startTime);
+          wGain.gain.linearRampToValueAtTime(w.vol, startTime + 0.08);
+          wGain.gain.exponentialRampToValueAtTime(0.001, startTime + w.dur);
+
+          osc.connect(wGain);
+          wGain.connect(ctx.destination);
+
+          osc.start(startTime);
+          osc.stop(startTime + w.dur);
+        });
+      } catch (e) {
+        // Safe fail
+      }
+    }
+
+    // Play quick button pop
+    function playPopSound() {
+      if (state.audioMuted) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.08);
+
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start();
+        osc.stop(ctx.currentTime + 0.08);
+      } catch (e) {}
+    }
+
+    /* =====================================================================
+       2. DATA PARSING & POOL MANAGEMENT
+       ===================================================================== */
+    const PRESETS = {
+      academicSubjects: [
+        "📐 Mathematics",
+        "🔬 Physics",
+        "🧪 Chemistry",
+        "🧬 Biology",
+        "📚 World Literature",
+        "🌍 Geography",
+        "🎨 Fine Arts",
+        "💻 Computer Science",
+        "🏛️ World History",
+        "🎵 Music Theory"
+      ],
+      annualParty: [
+        "🏆 iPhone 17 Pro Max",
+        "💻 MacBook Air M4",
+        "🎧 Sony WH-1000XM6",
+        "🏖️ Maldives 3D2N Trip",
+        "💵 $1,000 Cash Voucher",
+        "🎮 PS5 Pro Console",
+        "⌚ Apple Watch Series 11",
+        "☕ Nespresso Machine",
+        "🧧 $200 Red Packet",
+        "🎁 Mystery Surprise Hamper"
+      ],
+      teamMembers: [
+        "Alex Rivera", "Sophia Zhang", "Liam Campbell", 
+        "Noah Tanaka", "Emma Watson", "Lucas Rossi", 
+        "Chloe Kim", "David Miller", "Mia Patel", 
+        "Ethan Chen", "Isabella Santos", "James Wilson"
+      ],
+      luckyNumbers: Array.from({ length: 20 }, (_, i) => `Lucky Number #${i + 1}`)
+    };
+
+    // Clean bullet points, numbering, and surrounding quotes from item string
+    function cleanSubjectName(str) {
+      if (!str) return '';
+      let cleaned = str.trim();
+      // Remove surrounding quotes
+      cleaned = cleaned.replace(/^["'“”`]+|["'“”`]+$/g, '').trim();
+      // Remove leading bullet points or numbered lists: e.g. "1. Math", "• Math", "- Math", "1) Math"
+      cleaned = cleaned.replace(/^([0-9]+[\.\)\:\-]\s*|[\u2022\u25cf\u25cb\u25aa\u25b6\-\*\+]\s*)/, '').trim();
+      return cleaned;
+    }
+
+    // Smart Parser supporting newlines, standard & Asian commas, semicolons, tabs, pipes
+    function parseInputText(text) {
+      if (!text || !text.trim()) return [];
+
+      let rawTokens = [];
+      // Normalize Asian full-width commas and punctuation
+      const normalized = text
+        .replace(/[\uFF0C\u3001]/g, ',') // Chinese/Japanese full-width commas to standard comma
+        .replace(/\uFF1B/g, ';')         // Full-width semicolon
+        .replace(/\uFF0F/g, '/');        // Full-width slash
+
+      // If multiline text is present, process line by line
+      if (normalized.includes('\n')) {
+        const lines = normalized.split(/\r?\n/);
+        lines.forEach(line => {
+          const trimmed = line.trim();
+          if (!trimmed) return;
+          // Check if this single line has comma, semicolon or tab separations
+          if (trimmed.includes(',') || trimmed.includes(';') || trimmed.includes('\t') || trimmed.includes('|')) {
+            trimmed.split(/[,;\t|]+/).forEach(tok => rawTokens.push(tok));
+          } else {
+            rawTokens.push(trimmed);
+          }
+        });
+      } else {
+        // Single line: split by comma, semicolon, tab or pipe
+        rawTokens = normalized.split(/[,;\t|]+/);
+      }
+
+      return rawTokens
+        .map(cleanSubjectName)
+        .filter(s => s.length > 0);
+    }
+
+    function syncItemsToTextarea() {
+      const textarea = document.getElementById('itemsInput');
+      if (textarea) {
+        textarea.value = state.items.join('\n');
+      }
+      savePoolToLocalStorage();
+    }
+
+    function savePoolToLocalStorage() {
+      try {
+        localStorage.setItem('lucky_draw_active_items', JSON.stringify(state.items));
+      } catch (e) {}
+    }
+
+    // Quick Add a single or multiple comma-separated subjects via the input form
+    function addNewName() {
+      const input = document.getElementById('singleNameInput');
+      const rawVal = input.value.trim();
+      if (!rawVal) return;
+
+      const parsed = parseInputText(rawVal);
+      if (parsed.length === 0) return;
+
+      state.items.push(...parsed);
+      syncItemsToTextarea();
+      input.value = '';
+      input.focus();
+      updateAllStages();
+      playPopSound();
+      showToast(parsed.length === 1 ? `Added "${parsed[0]}" to wheel!` : `Added ${parsed.length} subjects to wheel!`, 'fa-circle-plus');
+    }
+
+    // Explicit button to sync and refresh the wheel from textarea
+    function manualSyncFromTextarea() {
+      const textarea = document.getElementById('itemsInput');
+      const text = textarea ? textarea.value : '';
+      state.items = parseInputText(text);
+      updateAllStages();
+      playPopSound();
+      
+      // Pulse animation on the wheel container to confirm update
+      const frame = document.getElementById('wheelOuterFrame');
+      if (frame) {
+        frame.classList.add('ring-4', 'ring-amber-400');
+        setTimeout(() => frame.classList.remove('ring-4', 'ring-amber-400'), 500);
+      }
+
+      if (state.items.length === 0) {
+        showToast('Textarea is empty. Type your subjects or pick a preset!', 'fa-triangle-exclamation');
+      } else {
+        showToast(`Wheel updated with ${state.items.length} subjects!`, 'fa-arrows-rotate');
+      }
+    }
+
+    // One-Click Direct Paste from Clipboard
+    async function pasteFromClipboard() {
+      try {
+        if (!navigator.clipboard || !navigator.clipboard.readText) {
+          throw new Error('Clipboard API not available');
+        }
+        const text = await navigator.clipboard.readText();
+        if (!text || !text.trim()) {
+          showToast('Clipboard is empty!', 'fa-triangle-exclamation');
+          return;
+        }
+
+        const newItems = parseInputText(text);
+        if (newItems.length === 0) {
+          showToast('No valid subjects found in clipboard.', 'fa-triangle-exclamation');
+          return;
+        }
+
+        state.items = [...state.items, ...newItems];
+        syncItemsToTextarea();
+        updateAllStages();
+        playPopSound();
+        showToast(`Pasted and added ${newItems.length} subjects!`, 'fa-clipboard-check');
+      } catch (err) {
+        // Fallback for browsers with strict permissions: focus textarea
+        const textarea = document.getElementById('itemsInput');
+        if (textarea) textarea.focus();
+        showToast('Press Ctrl+V / Cmd+V into the box below', 'fa-keyboard');
+      }
+    }
+
+    // Import names from a TXT or CSV file
+    function handleFileUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const content = e.target.result;
+        const imported = parseInputText(content).filter(s => {
+          const lower = s.toLowerCase();
+          return lower !== 'name' && lower !== 'names' && lower !== 'participant' && lower !== 'participants' && lower !== 'subject' && lower !== 'subjects';
+        });
+
+        if (imported.length === 0) {
+          showToast('No valid subjects detected in file.', 'fa-triangle-exclamation');
+          return;
+        }
+
+        state.items = [...state.items, ...imported];
+        syncItemsToTextarea();
+        updateAllStages();
+        playPopSound();
+        showToast(`Imported ${imported.length} subjects from ${file.name}!`, 'fa-file-circle-check');
+        event.target.value = '';
+      };
+      reader.readAsText(file);
+    }
+
+    function applyPreset(presetKey) {
+      if (state.isSpinning) return;
+      if (PRESETS[presetKey]) {
+        state.items = [...PRESETS[presetKey]];
+        syncItemsToTextarea();
+        updateAllStages();
+        showToast(`Loaded ${PRESETS[presetKey].length} items from preset!`, 'fa-circle-check');
+      }
+    }
+
+    function handleItemsChange() {
+      const textarea = document.getElementById('itemsInput');
+      const text = textarea ? textarea.value : '';
+      state.items = parseInputText(text);
+      savePoolToLocalStorage();
+      updateAllStages();
+    }
+
+    // Delete single item from active pool via badge (x)
+    function removeSingleItem(index) {
+      if (state.isSpinning) return;
+      if (index >= 0 && index < state.items.length) {
+        const removed = state.items.splice(index, 1)[0];
+        syncItemsToTextarea();
+        updateAllStages();
+        playPopSound();
+        showToast(`Removed "${removed}"`, 'fa-trash-can');
+      }
+    }
+
+    function renderSubjectChips() {
+      const container = document.getElementById('itemsChipsContainer');
+      const countLabel = document.getElementById('activeCountLabel');
+      if (!container || !countLabel) return;
+
+      countLabel.innerText = state.items.length;
+
+      if (state.items.length === 0) {
+        container.innerHTML = `
+          <div class="w-full text-center py-4 text-xs text-slate-500">
+            Pool is empty. Type a subject above, click <strong>Paste</strong>, or pick a preset!
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = state.items.map((item, idx) => `
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs bg-slate-900 border border-slate-700/80 text-slate-200 font-medium group transition-all hover:border-rose-500/50">
+          <span class="truncate max-w-[140px]">${item}</span>
+          <button 
+            type="button" 
+            onclick="removeSingleItem(${idx})" 
+            title="Remove item" 
+            class="text-slate-500 hover:text-rose-400 transition-colors p-0.5 rounded flex items-center justify-center">
+            <i class="fa-solid fa-xmark text-[11px]"></i>
+          </button>
+        </span>
+      `).join('');
+    }
+
+    function shuffleCurrentItems() {
+      if (state.isSpinning || state.items.length < 2) return;
+      for (let i = state.items.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [state.items[i], state.items[j]] = [state.items[j], state.items[i]];
+      }
+      syncItemsToTextarea();
+      updateAllStages();
+      playPopSound();
+      showToast('Items shuffled randomly!', 'fa-shuffle');
+    }
+
+    function clearAllEntries() {
+      if (state.isSpinning) return;
+      state.items = [];
+      const textarea = document.getElementById('itemsInput');
+      if (textarea) textarea.value = '';
+      savePoolToLocalStorage();
+      updateAllStages();
+      showToast('Entries cleared.', 'fa-trash-can');
+    }
+
+    function updateAllStages() {
+      const count = state.items.length;
+      document.getElementById('itemsCountBadge').innerText = `${count} Items`;
+      
+      const hintElem = document.getElementById('wheelHintText');
+      if (hintElem) {
+        if (count === 0) {
+          hintElem.innerHTML = `<span class="text-rose-400 font-semibold"><i class="fa-solid fa-circle-info mr-1"></i> Add at least 2 subjects to spin the wheel!</span>`;
+        } else if (count === 1) {
+          hintElem.innerHTML = `<span class="text-amber-400 font-semibold"><i class="fa-solid fa-circle-exclamation mr-1"></i> 1 subject added. Add 1 more subject so the wheel can spin!</span>`;
+        } else {
+          hintElem.innerHTML = `<i class="fa-solid fa-keyboard text-slate-500"></i> Press <kbd class="px-2 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300 text-xs font-mono font-bold">SPACE</kbd> or Click Center to Spin!`;
+        }
+      }
+
+      renderSubjectChips();
+      drawWheel();
+      setupMysteryBoxes();
+      updateRaffleDisplayDefault();
+    }
+
+    /* =====================================================================
+       3. DRAW MODES SWITCHER
+       ===================================================================== */
+    function switchDrawMode(mode) {
+      if (state.isSpinning) {
+        showToast('Please wait for the current draw to finish!', 'fa-triangle-exclamation');
+        return;
+      }
+      state.mode = mode;
+      
+      const modes = ['wheel', 'raffle', 'mystery'];
+      modes.forEach(m => {
+        const btn = document.getElementById(`btn-mode-${m}`);
+        const view = document.getElementById(`view-${m}`);
+        if (m === mode) {
+          btn.className = "mode-tab-btn active px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all text-white bg-gradient-to-r from-rose-600 to-purple-600 shadow-md";
+          view.classList.remove('hidden');
+        } else {
+          btn.className = "mode-tab-btn px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all text-slate-400 hover:text-white";
+          view.classList.add('hidden');
+        }
+      });
+
+      playPopSound();
+      if (mode === 'wheel') drawWheel();
+      if (mode === 'mystery') setupMysteryBoxes();
+    }
+
+    function triggerActiveDraw() {
+      if (state.mode === 'wheel') spinWheel();
+      else if (state.mode === 'raffle') triggerRaffleDraw();
+      else if (state.mode === 'mystery') autoPickMysteryBox();
+    }
+
+    /* =====================================================================
+       4. WHEEL OF FORTUNE ENGINE (CANVAS & PHYSICS)
+       ===================================================================== */
+    let lastTickPegIndex = -1;
+
+    function getCanvasAndContext() {
+      const canvas = document.getElementById('wheelCanvas');
+      if (!canvas) return { canvas: null, ctx: null };
+      const ctx = canvas.getContext('2d');
+      return { canvas, ctx };
+    }
+
+    function drawWheel() {
+      const { canvas, ctx } = getCanvasAndContext();
+      if (!canvas || !ctx) return;
+
+      const width = canvas.width;
+      const height = canvas.height;
+      const center = width / 2;
+      const radius = center - 30;
+
+      // Safe check against NaN angle
+      if (isNaN(state.wheel.angle)) {
+        state.wheel.angle = 0;
+      }
+
+      ctx.clearRect(0, 0, width, height);
+
+      const items = state.items;
+      const count = items.length;
+
+      // Case 0: Empty Pool State
+      if (count === 0) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(center, center, radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#111827';
+        ctx.fill();
+        ctx.strokeStyle = '#374151';
+        ctx.lineWidth = 6;
+        ctx.stroke();
+
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = 'bold 28px Outfit, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Wheel is Empty', center, center - 20);
+        
+        ctx.fillStyle = '#f43f5e';
+        ctx.font = '600 20px Outfit, sans-serif';
+        ctx.fillText('+ Add subjects on the right', center, center + 22);
+        ctx.restore();
+        return;
+      }
+
+      // Case 1: Single Item State (Display cleanly on wheel)
+      if (count === 1) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(center, center, radius, 0, Math.PI * 2);
+        ctx.fillStyle = state.wheel.sliceColors[0];
+        ctx.fill();
+        ctx.strokeStyle = '#090d16';
+        ctx.lineWidth = 6;
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 36px Outfit, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = 6;
+        ctx.fillText(items[0], center, center - 40);
+
+        ctx.font = '600 20px Outfit, sans-serif';
+        ctx.fillStyle = '#fef08a';
+        ctx.fillText('(Add 1 more subject to spin!)', center, center + 35);
+        ctx.restore();
+        return;
+      }
+
+      const arc = (Math.PI * 2) / count;
+
+      ctx.save();
+      ctx.translate(center, center);
+      ctx.rotate(state.wheel.angle);
+
+      // Draw Segments
+      for (let i = 0; i < count; i++) {
+        const angleStart = i * arc;
+        const angleEnd = angleStart + arc;
+
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, radius, angleStart, angleEnd);
+        ctx.closePath();
+
+        const color = state.wheel.sliceColors[i % state.wheel.sliceColors.length];
+        ctx.fillStyle = color;
+        ctx.fill();
+
+        ctx.strokeStyle = '#090d16';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        // Segment Subject Text
+        ctx.save();
+        ctx.rotate(angleStart + arc / 2);
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = 'rgba(0,0,0,0.7)';
+        ctx.shadowBlur = 4;
+
+        // Auto responsive font sizing
+        const fontSize = count > 20 ? 18 : count > 12 ? 22 : 28;
+        ctx.font = `700 ${fontSize}px Outfit, sans-serif`;
+
+        let text = items[i];
+        if (text.length > 20) {
+          text = text.substring(0, 18) + '...';
+        }
+        ctx.fillText(text, radius - 40, 0);
+        ctx.restore();
+      }
+
+      // Outer rim decorative lights/pegs
+      const pegCount = Math.max(count * 2, 24);
+      for (let p = 0; p < pegCount; p++) {
+        const pegAngle = (p * Math.PI * 2) / pegCount;
+        const px = Math.cos(pegAngle) * (radius + 12);
+        const py = Math.sin(pegAngle) * (radius + 12);
+
+        ctx.beginPath();
+        ctx.arc(px, py, 6, 0, Math.PI * 2);
+        ctx.fillStyle = p % 2 === 0 ? '#fbbf24' : '#ffffff';
+        ctx.shadowColor = '#f59e0b';
+        ctx.shadowBlur = 8;
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function spinWheel() {
+      if (state.isSpinning) return;
+      if (state.items.length < 2) {
+        showToast('Please add at least 2 subjects to spin the wheel!', 'fa-triangle-exclamation');
+        return;
+      }
+
+      state.isSpinning = true;
+      getAudioContext();
+
+      const durationSec = parseFloat(document.getElementById('spinDurationSelect').value) || 6;
+      const count = state.items.length;
+      const arc = (Math.PI * 2) / count;
+
+      const winnerIndex = Math.floor(Math.random() * count);
+
+      // Normalize starting angle within [0, 2*PI)
+      const currentAngle = isNaN(state.wheel.angle) ? 0 : state.wheel.angle;
+      const startAngle = ((currentAngle % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2);
+      state.wheel.angle = startAngle;
+
+      // Pointer sits at 12 o'clock (3*PI/2)
+      const targetSegmentCenter = (winnerIndex + 0.5) * arc;
+      let desiredNormalized = (3 * Math.PI / 2) - targetSegmentCenter;
+      desiredNormalized = ((desiredNormalized % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2);
+
+      let extraAngle = desiredNormalized - startAngle;
+      if (extraAngle < 0) {
+        extraAngle += Math.PI * 2;
+      }
+
+      // 5 to 7 full rotations for suspense
+      const minFullRotations = 5 + Math.floor(Math.random() * 3);
+      const distance = (minFullRotations * Math.PI * 2) + extraAngle;
+      const finalTarget = startAngle + distance;
+
+      const startTime = performance.now();
+      const totalDuration = durationSec * 1000;
+      const pointerElem = document.getElementById('wheel-pointer');
+      lastTickPegIndex = Math.floor(startAngle / arc);
+
+      function animateSpin(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / totalDuration, 1);
+
+        // Quintic Deceleration Easing
+        const easeOut = 1 - Math.pow(1 - progress, 4.2);
+        state.wheel.angle = startAngle + (distance * easeOut);
+
+        // Audio ticks and pointer flick
+        const currentSlicePeg = Math.floor(state.wheel.angle / arc);
+        if (currentSlicePeg !== lastTickPegIndex) {
+          lastTickPegIndex = currentSlicePeg;
+          playTickSound();
+
+          if (pointerElem) {
+            pointerElem.style.transform = 'rotate(-18deg)';
+            setTimeout(() => { pointerElem.style.transform = 'rotate(0deg)'; }, 45);
+          }
+        }
+
+        drawWheel();
+
+        if (progress < 1) {
+          requestAnimationFrame(animateSpin);
+        } else {
+          state.wheel.angle = ((finalTarget % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2);
+          drawWheel();
+          state.isSpinning = false;
+          handleWinnerDrawn(state.items[winnerIndex], 'Fortune Wheel');
+        }
+      }
+
+      requestAnimationFrame(animateSpin);
+    }
+
+    /* =====================================================================
+       5. STAGE RAFFLE / ROLODEX ENGINE
+       ===================================================================== */
+    let raffleInterval = null;
+
+    function updateRaffleDisplayDefault() {
+      const display = document.getElementById('raffleDisplay');
+      if (!display) return;
+      if (state.items.length === 0) {
+        display.innerText = 'No Entries Found';
+      } else if (!state.isSpinning) {
+        display.innerText = 'Ready to Roll';
+      }
+    }
+
+    function triggerRaffleDraw() {
+      if (state.isSpinning) return;
+      if (state.items.length < 2) {
+        showToast('Need at least 2 entries to conduct raffle roll!', 'fa-triangle-exclamation');
+        return;
+      }
+
+      state.isSpinning = true;
+      getAudioContext();
+
+      const display = document.getElementById('raffleDisplay');
+      const glow = document.getElementById('raffleGlowAura');
+      const btn = document.getElementById('raffleBtn');
+      const durationSec = parseFloat(document.getElementById('spinDurationSelect').value) || 6;
+
+      btn.disabled = true;
+      btn.classList.add('opacity-50', 'pointer-events-none');
+      glow.classList.remove('opacity-0');
+
+      let speed = 40;
+      let elapsed = 0;
+      const totalTime = durationSec * 1000;
+      let currentIndex = 0;
+
+      function cycleNames() {
+        currentIndex = Math.floor(Math.random() * state.items.length);
+        display.innerText = state.items[currentIndex];
+        playTickSound();
+
+        elapsed += speed;
+        if (elapsed > totalTime * 0.7) {
+          speed += 28;
+        }
+
+        if (elapsed < totalTime) {
+          raffleInterval = setTimeout(cycleNames, speed);
+        } else {
+          const winner = state.items[currentIndex];
+          state.isSpinning = false;
+          glow.classList.add('opacity-0');
+          btn.disabled = false;
+          btn.classList.remove('opacity-50', 'pointer-events-none');
+          handleWinnerDrawn(winner, 'Stage Rolodex');
+        }
+      }
+
+      cycleNames();
+    }
+
+    /* =====================================================================
+       6. MYSTERY GIFT BOXES ENGINE
+       ===================================================================== */
+    function setupMysteryBoxes() {
+      const grid = document.getElementById('mysteryBoxGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      if (state.items.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-12 text-center text-slate-500 text-sm">
+            Please add items in the right sidebar to generate mystery boxes.
+          </div>
+        `;
+        return;
+      }
+
+      const boxCount = Math.min(Math.max(state.items.length, 6), 12);
+      const shuffledPrizes = [...state.items].sort(() => 0.5 - Math.random());
+      state.mysteryCards = [];
+
+      for (let i = 0; i < boxCount; i++) {
+        const prize = shuffledPrizes[i % shuffledPrizes.length];
+        state.mysteryCards.push({ id: i, prize: prize, opened: false });
+
+        const card = document.createElement('div');
+        card.id = `mystery-box-${i}`;
+        card.className = "box-card perspective-1000 h-36 cursor-pointer select-none";
+        card.onclick = () => openMysteryBox(i);
+
+        card.innerHTML = `
+          <div class="relative w-full h-full preserve-3d transition-transform duration-500 rounded-2xl border border-slate-700/80 bg-gradient-to-b from-slate-800 to-slate-900 shadow-xl flex flex-col items-center justify-center p-3 text-center group">
+            <div class="flex flex-col items-center justify-center">
+              <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-rose-500 to-purple-600 text-white flex items-center justify-center text-xl shadow-lg shadow-rose-600/30 group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-gift"></i>
+              </div>
+              <span class="text-xs font-bold text-slate-300 mt-2 font-mono uppercase tracking-wider">BOX #${i + 1}</span>
+              <span class="text-[10px] text-purple-400 font-semibold">Tap to Unbox</span>
+            </div>
+          </div>
+        `;
+
+        grid.appendChild(card);
+      }
+    }
+
+    function openMysteryBox(index) {
+      if (state.isSpinning) return;
+      const cardData = state.mysteryCards[index];
+      if (!cardData || cardData.opened) return;
+
+      state.isSpinning = true;
+      cardData.opened = true;
+      getAudioContext();
+      playPopSound();
+
+      const boxElem = document.getElementById(`mystery-box-${index}`);
+      boxElem.classList.add('opened');
+
+      boxElem.innerHTML = `
+        <div class="relative w-full h-full rounded-2xl border-2 border-amber-400 bg-gradient-to-b from-amber-500/20 via-slate-900 to-slate-950 shadow-2xl flex flex-col items-center justify-center p-3 text-center animate-pulse">
+          <div class="w-10 h-10 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center text-lg mb-1">
+            <i class="fa-solid fa-trophy"></i>
+          </div>
+          <span class="text-[10px] font-bold text-amber-300 uppercase">Prize Revealed</span>
+          <span class="text-xs sm:text-sm font-extrabold text-white mt-0.5 line-clamp-2">${cardData.prize}</span>
+        </div>
+      `;
+
+      setTimeout(() => {
+        state.isSpinning = false;
+        handleWinnerDrawn(cardData.prize, `Mystery Box #${index + 1}`);
+      }, 500);
+    }
+
+    function autoPickMysteryBox() {
+      if (state.isSpinning) return;
+      const available = state.mysteryCards.filter(c => !c.opened);
+      if (available.length === 0) {
+        showToast('All mystery boxes are already opened! Reset to play again.', 'fa-boxes-stacked');
+        return;
+      }
+      const randomCard = available[Math.floor(Math.random() * available.length)];
+      openMysteryBox(randomCard.id);
+    }
+
+    function resetMysteryBoxes() {
+      if (state.isSpinning) return;
+      setupMysteryBoxes();
+      showToast('Mystery boxes shuffled and reset!', 'fa-rotate-right');
+    }
+
+    /* =====================================================================
+       7. WINNER CEREMONY & HISTORY HANDLING
+       ===================================================================== */
+    function handleWinnerDrawn(winnerName, sourceMode) {
+      playVictoryFanfare();
+      playCrowdCheer();
+      triggerGrandConfetti();
+
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+      const record = {
+        name: winnerName,
+        source: sourceMode,
+        timestamp: timeStr,
+        id: Date.now()
+      };
+      state.winners.unshift(record);
+
+      const removeToggle = document.getElementById('removeWinnerToggle').checked;
+      if (removeToggle) {
+        const idx = state.items.indexOf(winnerName);
+        if (idx !== -1) {
+          state.items.splice(idx, 1);
+          syncItemsToTextarea();
+          updateAllStages();
+        }
+      }
+
+      updateWinnerBadgesAndLists();
+
+      const modal = document.getElementById('winnerModal');
+      const modalCard = document.getElementById('winnerModalCard');
+      const nameElem = document.getElementById('winnerNameDisplay');
+      const infoElem = document.getElementById('winnerDrawInfo');
+
+      nameElem.innerText = winnerName;
+      infoElem.innerText = `Drawn via ${sourceMode} at ${timeStr}` + (removeToggle ? ' • (Removed from pool)' : '');
+
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+      modalCard.classList.remove('scale-90');
+      modalCard.classList.add('scale-100');
+    }
+
+    function closeWinnerModal() {
+      const modal = document.getElementById('winnerModal');
+      const modalCard = document.getElementById('winnerModalCard');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      modalCard.classList.remove('scale-100');
+      modalCard.classList.add('scale-90');
+    }
+
+    function updateWinnerBadgesAndLists() {
+      const count = state.winners.length;
+      document.getElementById('winnerBadgeCount').innerText = count;
+
+      const quickList = document.getElementById('quickRecentList');
+      if (count === 0) {
+        quickList.innerHTML = `<div class="py-4 text-center text-xs text-slate-500">No winners drawn yet.</div>`;
+      } else {
+        quickList.innerHTML = state.winners.slice(0, 5).map((w, idx) => `
+          <div class="py-2.5 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2 overflow-hidden">
+              <span class="w-5 h-5 rounded-full bg-amber-400/20 text-amber-300 flex items-center justify-center font-bold text-[10px] shrink-0">#${count - idx}</span>
+              <span class="font-bold text-slate-200 truncate">${w.name}</span>
+            </div>
+            <span class="text-[10px] text-slate-500 shrink-0">${w.timestamp}</span>
+          </div>
+        `).join('');
+      }
+
+      const historyList = document.getElementById('historyModalList');
+      if (count === 0) {
+        historyList.innerHTML = `<div class="py-12 text-center text-slate-500 text-sm">No winners recorded yet. Start drawing!</div>`;
+      } else {
+        historyList.innerHTML = state.winners.map((w, idx) => `
+          <div class="p-3 rounded-2xl bg-slate-950/70 border border-slate-800 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-rose-500 text-white flex items-center justify-center font-black text-xs">
+                ${count - idx}
+              </div>
+              <div>
+                <h4 class="font-bold text-sm text-slate-100">${w.name}</h4>
+                <p class="text-[11px] text-slate-400">${w.source} • ${w.timestamp}</p>
+              </div>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-amber-300 border border-amber-500/30 font-semibold">
+              Winner
+            </span>
+          </div>
+        `).join('');
+      }
+    }
+
+    function openHistoryModal() {
+      const modal = document.getElementById('historyModal');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function closeHistoryModal() {
+      const modal = document.getElementById('historyModal');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    function clearHistoryRecords() {
+      if (state.winners.length === 0) return;
+      state.winners = [];
+      updateWinnerBadgesAndLists();
+      showToast('Winner records cleared.', 'fa-trash-can');
+    }
+
+    function copyWinnersList() {
+      if (state.winners.length === 0) {
+        showToast('No winners to copy!', 'fa-triangle-exclamation');
+        return;
+      }
+      const formatted = state.winners
+        .map((w, i) => `${state.winners.length - i}. ${w.name} (${w.source} - ${w.timestamp})`)
+        .join('\n');
+      
+      const tempTextArea = document.createElement('textarea');
+      tempTextArea.value = `=== LUCKY DRAW WINNERS ===\n${formatted}`;
+      document.body.appendChild(tempTextArea);
+      tempTextArea.select();
+      try {
+        document.execCommand('copy');
+        showToast('Winners copied to clipboard!', 'fa-copy');
+      } catch (err) {
+        showToast('Failed to copy to clipboard', 'fa-triangle-exclamation');
+      }
+      document.body.removeChild(tempTextArea);
+    }
+
+    /* =====================================================================
+       8. VISUAL EFFECTS & CONFETTI
+       ===================================================================== */
+    function triggerGrandConfetti() {
+      if (typeof confetti !== 'function') return;
+
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+
+      setTimeout(() => {
+        confetti({
+          particleCount: 50,
+          angle: 60,
+          spread: 60,
+          origin: { x: 0.1, y: 0.6 }
+        });
+        confetti({
+          particleCount: 50,
+          angle: 120,
+          spread: 60,
+          origin: { x: 0.9, y: 0.6 }
+        });
+      }, 250);
+    }
+
+    function fireConfettiAgain() {
+      playCrowdCheer();
+      triggerGrandConfetti();
+    }
+
+    /* =====================================================================
+       9. SYSTEM UTILITIES (AUDIO, FULLSCREEN, KEYBOARD, TOAST)
+       ===================================================================== */
+    function toggleMute() {
+      state.audioMuted = !state.audioMuted;
+      const icon = document.getElementById('soundIcon');
+      if (state.audioMuted) {
+        icon.className = 'fa-solid fa-volume-xmark text-rose-400';
+        showToast('Sound Muted', 'fa-volume-xmark');
+      } else {
+        icon.className = 'fa-solid fa-volume-high text-slate-300';
+        showToast('Sound Enabled', 'fa-volume-high');
+        getAudioContext();
+        playPopSound();
+      }
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    }
+
+    let toastTimeout = null;
+    function showToast(message, iconClass = 'fa-circle-check') {
+      const toast = document.getElementById('toast');
+      const msg = document.getElementById('toastMsg');
+      const icon = document.getElementById('toastIcon');
+
+      msg.innerText = message;
+      icon.className = `fa-solid ${iconClass} text-rose-400`;
+
+      toast.classList.remove('opacity-0', 'translate-y-2');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+      }, 2800);
+    }
+
+    // Keyboard controls
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'INPUT') {
+        e.preventDefault();
+        triggerActiveDraw();
+      }
+      if (e.code === 'Escape') {
+        closeWinnerModal();
+        closeHistoryModal();
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      drawWheel();
+    });
+
+    /* =====================================================================
+       10. APPLICATION INITIALIZATION
+       ===================================================================== */
+    function initApp() {
+      // 1. Check if user already has text written inside the <textarea> HTML
+      const textarea = document.getElementById('itemsInput');
+      const textareaText = textarea ? textarea.value.trim() : '';
+
+      if (textareaText.length > 0) {
+        state.items = parseInputText(textareaText);
+      } else {
+        // 2. Check if localStorage has saved session items
+        let savedItems = null;
+        try {
+          savedItems = JSON.parse(localStorage.getItem('lucky_draw_active_items'));
+        } catch (e) {}
+
+        if (Array.isArray(savedItems) && savedItems.length > 0) {
+          state.items = savedItems;
+          syncItemsToTextarea();
+        } else {
+          // 3. Fallback to default subjects preset
+          state.items = [...PRESETS.academicSubjects];
+          syncItemsToTextarea();
+        }
+      }
+
+      updateAllStages();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initApp);
+    } else {
+      initApp();
+    }
+  </script>
+</body>
+</html>
+```
