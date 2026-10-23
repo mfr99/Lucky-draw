@@ -269,7 +269,7 @@
         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
           <div class="flex items-center gap-2">
             <i class="fa-solid fa-list-check text-rose-400"></i>
-            <h2 class="font-bold text-base text-white">Draw Pool & Entries</h2>
+            <h2 class="font-bold text-base text-white">Draw Pool & Subjects</h2>
           </div>
           <span id="itemsCountBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-rose-300 font-bold border border-rose-500/30">
             0 Items
@@ -279,29 +279,32 @@
         <!-- Preset Templates Selector -->
         <div>
           <label class="text-xs font-semibold text-slate-400 block mb-1.5 uppercase tracking-wider">Quick Presets</label>
-          <div class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <button onclick="applyPreset('annualParty')" class="p-2 rounded-xl bg-slate-800/70 hover:bg-slate-700/80 border border-slate-700 text-xs font-medium text-slate-200 transition-all text-center">
-              🎉 Party Prizes
+              🎉 Prizes
+            </button>
+            <button onclick="applyPreset('academicSubjects')" class="p-2 rounded-xl bg-slate-800/70 hover:bg-slate-700/80 border border-slate-700 text-xs font-medium text-slate-200 transition-all text-center">
+              📚 Subjects
             </button>
             <button onclick="applyPreset('teamMembers')" class="p-2 rounded-xl bg-slate-800/70 hover:bg-slate-700/80 border border-slate-700 text-xs font-medium text-slate-200 transition-all text-center">
-              👥 Teammates
+              👥 Names
             </button>
             <button onclick="applyPreset('luckyNumbers')" class="p-2 rounded-xl bg-slate-800/70 hover:bg-slate-700/80 border border-slate-700 text-xs font-medium text-slate-200 transition-all text-center">
-              🔢 Numbers 1-20
+              🔢 1-20
             </button>
           </div>
         </div>
 
-        <!-- Single Name Quick Add Bar -->
+        <!-- Single / Multi Name Quick Add Bar -->
         <div>
           <label for="singleNameInput" class="text-xs font-semibold text-slate-400 block mb-1.5 uppercase tracking-wider">
-            Quick Add Name
+            Quick Add Subject or Name
           </label>
           <div class="flex gap-2">
             <input 
               type="text" 
               id="singleNameInput" 
-              placeholder="e.g. Sarah Connor" 
+              placeholder="e.g. Physics, Chemistry or Sarah Connor" 
               onkeydown="if(event.key==='Enter') addNewName()"
               class="flex-1 bg-slate-950/90 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-rose-500/80 focus:ring-1 focus:ring-rose-500/80"
             />
@@ -312,44 +315,47 @@
               <i class="fa-solid fa-plus"></i> Add
             </button>
           </div>
+          <p class="text-[11px] text-slate-500 mt-1">Tip: You can add multiple subjects separated by commas.</p>
         </div>
 
         <!-- Textarea for entries -->
         <div>
           <div class="flex items-center justify-between mb-1.5">
             <label for="itemsInput" class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Bulk Candidates List (1 per line)
+              Bulk Subjects & Candidates
             </label>
             <div class="flex items-center gap-2">
+              <button onclick="pasteFromClipboard()" class="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1 font-semibold" title="Paste from clipboard">
+                <i class="fa-solid fa-paste"></i> Paste
+              </button>
               <label for="fileImportInput" class="cursor-pointer text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-semibold">
-                <i class="fa-solid fa-file-arrow-up"></i> Import File
+                <i class="fa-solid fa-file-arrow-up"></i> Import
               </label>
               <input type="file" id="fileImportInput" accept=".txt,.csv" onchange="handleFileUpload(event)" class="hidden" />
-              <button onclick="shuffleCurrentItems()" class="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 font-semibold ml-1">
+              <button onclick="shuffleCurrentItems()" class="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 font-semibold">
                 <i class="fa-solid fa-shuffle"></i> Shuffle
               </button>
             </div>
           </div>
-          <textarea id="itemsInput" rows="6" oninput="handleItemsChange()" placeholder="Paste names here, one per line:&#10;Alice Johnson&#10;Bob Smith&#10;Charlie Brown" class="w-full bg-slate-950/90 border border-slate-800 rounded-2xl p-3 text-sm text-slate-200 focus:outline-none focus:border-rose-500/80 focus:ring-1 focus:ring-rose-500/80 resize-none font-mono"></textarea>
-          <p class="text-[11px] text-slate-500 mt-1">💡 You can paste copied columns directly from Excel or Google Sheets.</p>
+          <textarea 
+            id="itemsInput" 
+            rows="5" 
+            oninput="handleItemsChange()" 
+            onchange="handleItemsChange()" 
+            onpaste="setTimeout(handleItemsChange, 20)" 
+            placeholder="Type or paste subjects here. Supports:&#10;• 1 per line&#10;• Comma-separated (Math, English, Science)&#10;• Excel columns" 
+            class="w-full bg-slate-950/90 border border-slate-800 rounded-2xl p-3 text-sm text-slate-200 focus:outline-none focus:border-rose-500/80 focus:ring-1 focus:ring-rose-500/80 resize-none font-mono"></textarea>
         </div>
 
-        <!-- Draw Rules & Fair Mode Settings -->
-        <div class="bg-slate-950/60 rounded-2xl p-3.5 border border-slate-800/80 flex flex-col gap-3">
-          <div class="flex items-center justify-between">
-            <div class="flex flex-col">
-              <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                <i class="fa-solid fa-user-minus text-amber-400"></i> Fair Mode (No Repeats)
-              </span>
-              <span class="text-[11px] text-slate-400">Remove winner automatically upon draw</span>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="removeWinnerToggle" class="sr-only peer" checked>
-              <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600"></div>
-            </label>
+        <!-- Live Badges Preview of Active Subjects -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Active Pool List (<span id="activeCountLabel">0</span>)
+            </span>
+            <button onclick="clearAllEntries()" class="text-[11px] text-rose-400 hover:text-rose-300 font-semibold">
+              <i class="fa-solid fa-trash-can mr-0.5"></i> Clear All
+            </button>
           </div>
-
-          <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
-            <div class="flex flex-col">
-              <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                <i class="fa-solid fa-stopwatch text-indi
+          <div id="itemsChipsContainer" class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-2.5 rounded-2xl bg-slate-950/80 border border-slate-800/90">
+  
